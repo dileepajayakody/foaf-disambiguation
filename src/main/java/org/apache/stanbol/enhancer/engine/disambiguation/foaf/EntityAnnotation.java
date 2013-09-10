@@ -35,12 +35,34 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An abstraction of an EntityAnnotation 
+ * An abstraction of an EntityAnnotation
  */
 public class EntityAnnotation implements Comparable<EntityAnnotation> {
 
 	private static final Logger log = LoggerFactory
 			.getLogger(EntityAnnotation.class);
+
+	/**
+	 * Default ratio for Disambiguation (2.0)
+	 */
+	public static final double DEFAULT_DISAMBIGUATION_RATIO = 2.0;
+	/**
+	 * Default ratio for the original fise:confidence of suggested entities
+	 */
+	public static final double DEFAULT_CONFIDNECE_RATIO = 1.0;
+
+	/**
+	 * The weight for disambiguation scores
+	 * <code>:= disRatio/(disRatio+confRatio)</code>
+	 */
+	private double disambiguationWeight = DEFAULT_DISAMBIGUATION_RATIO
+			/ (DEFAULT_DISAMBIGUATION_RATIO + DEFAULT_CONFIDNECE_RATIO);
+	/**
+	 * The weight for the original confidence scores
+	 * <code>:= confRatio/(disRatio+confRatio)</code>
+	 */
+	private double confidenceWeight = DEFAULT_CONFIDNECE_RATIO
+			/ (DEFAULT_DISAMBIGUATION_RATIO + DEFAULT_CONFIDNECE_RATIO);
 
 	private static final LiteralFactory lf = LiteralFactory.getInstance();
 
@@ -109,12 +131,16 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 		return entityAnnotation;
 	}
 
+	public void calculateDisambiguatedConfidence(int allLinks) {
+		this.disambiguationScore = (double) (linkMatches / allLinks);
+		this.disambiguatedConfidence = (originalConfidnece * confidenceWeight)
+				+ (disambiguationScore * disambiguationWeight);
+	}
+
 	/**
 	 * The URI of the fise:EntityAnnotation representing this suggestion in the
 	 * {@link ContentItem#getMetadata() metadata} of the processed
-	 * {@link ContentItem}. This will be <code>null</code> if this Suggestion
-	 * was created as part of the Disambiguation process and was not present in
-	 * the metadata of the content item before the disambiguation.
+	 * {@link ContentItem}. This will be <code>null</code>
 	 * 
 	 * @return the URI of the fise:EntityAnnotation or <code>null</code> if not
 	 *         present.
@@ -273,6 +299,5 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 		return result == 0 ? entityUri.getUnicodeString().compareTo(
 				other.entityUri.getUnicodeString()) : result;
 	}
-	
-	
+
 }

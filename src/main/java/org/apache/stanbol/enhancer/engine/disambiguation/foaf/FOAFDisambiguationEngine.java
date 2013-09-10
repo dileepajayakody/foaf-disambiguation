@@ -1,5 +1,6 @@
 package org.apache.stanbol.enhancer.engine.disambiguation.foaf;
 
+import static org.apache.stanbol.enhancer.servicesapi.rdf.Properties.ENHANCER_CONFIDENCE;
 import static org.apache.stanbol.enhancer.servicesapi.rdf.Properties.RDF_TYPE;
 import static org.apache.stanbol.enhancer.servicesapi.rdf.Properties.DC_RELATION;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.clerezza.rdf.core.LiteralFactory;
 import org.apache.clerezza.rdf.core.MGraph;
 import org.apache.clerezza.rdf.core.Triple;
 import org.apache.clerezza.rdf.core.UriRef;
@@ -33,6 +35,7 @@ import org.apache.stanbol.enhancer.servicesapi.EnhancementEngine;
 import org.apache.stanbol.enhancer.servicesapi.InvalidContentException;
 import org.apache.stanbol.enhancer.servicesapi.ServiceProperties;
 import org.apache.stanbol.enhancer.servicesapi.helper.ContentItemHelper;
+import org.apache.stanbol.enhancer.servicesapi.helper.EnhancementEngineHelper;
 import org.apache.stanbol.enhancer.servicesapi.impl.AbstractEnhancementEngine;
 import org.apache.stanbol.enhancer.servicesapi.rdf.TechnicalClasses;
 import org.apache.stanbol.entityhub.servicesapi.model.Entity;
@@ -55,10 +58,16 @@ public class FOAFDisambiguationEngine extends
 	private static Logger log = LoggerFactory
 			.getLogger(FOAFDisambiguationEngine.class);
 
+	    
+	
+	 /**
+     * The {@link LiteralFactory} used to create typed RDF literals
+     */
+    private final LiteralFactory literalFactory = LiteralFactory.getInstance();
+
 	@Reference
 	protected SiteManager siteManager;
 
-	//need to use this to get foaf namespaces..
 	@Reference
 	protected NamespacePrefixService namespacePrefixService;
 	/**
@@ -139,6 +148,7 @@ public class FOAFDisambiguationEngine extends
 						log.error(e.getMessage());
 						e.printStackTrace();
 					}
+
 					// maintaining the set of multiple textAnnotations for a
 					// single entityAnnotation <entityAnnotation:
 					// Set<textAnnotation>>
@@ -155,7 +165,8 @@ public class FOAFDisambiguationEngine extends
 			if (suggestionSet.isEmpty()) {
 				log.warn("TextAnnotation" + textAnnotation
 						+ "has no suggestions.");
-				} else {
+				// return null; // nothing to disambiguate
+			} else {
 				// putting suggestions for a textAnnotation
 				// textAnnotation:suggestions
 				suggestionMap.put(textAnnotation, suggestionSet);
@@ -164,6 +175,9 @@ public class FOAFDisambiguationEngine extends
 		// calculate link matches
 		caculateLinkMatchesForEntities();
 		performLinksDisambiguation();
+		//writing back to content item
+		applyDisambiguationResults(graph);
+		
 	}
 
 	public Entity getEntityFromEntityHub(EntityAnnotation sug)
@@ -252,6 +266,17 @@ public class FOAFDisambiguationEngine extends
 		}
 	}
 
+	public void applyDisambiguationResults(MGraph graph){
+		
+		for(EntityAnnotation ea : allEnitityAnnotations.values()){
+			
+			ea.calculateDisambiguatedConfidence(urisReferencedByEntities.keySet().size());
+			 // change the confidence
+            EnhancementEngineHelper.set(graph, ea.getUriLink(), ENHANCER_CONFIDENCE,
+               ea.getDisambiguatedConfidence(), literalFactory);
+            EnhancementEngineHelper.addContributingEngine(graph, ea.getUriLink(), this);
+		}
+	}
 	/**
 	 * Activate and read the properties
 	 * 
