@@ -35,8 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A suggestion of an {@link Entity} for a fise:TextAnnotation processed by the
- * NamedEntityTaggingEngine
+ * An abstraction of an EntityAnnotation 
  */
 public class EntityAnnotation implements Comparable<EntityAnnotation> {
 
