@@ -58,8 +58,6 @@ public class FOAFDisambiguationEngine extends
 	private static Logger log = LoggerFactory
 			.getLogger(FOAFDisambiguationEngine.class);
 
-	    
-	
 	 /**
      * The {@link LiteralFactory} used to create typed RDF literals
      */
@@ -142,7 +140,8 @@ public class FOAFDisambiguationEngine extends
 					suggestionSet.add(suggestion);
 					// process entityAnnotation for disambiguation
 					try {
-						processFOAFNames(suggestion);
+						//TO DO: need to add disambiguation logic for literal matching with foaf:name and related properties
+						//processFOAFNames(suggestion);
 						processEntityReferences(suggestion);
 					} catch (SiteException e) {
 						log.error(e.getMessage());
