@@ -58,10 +58,19 @@ public class FOAFDisambiguationEngine extends
 	private static Logger log = LoggerFactory
 			.getLogger(FOAFDisambiguationEngine.class);
 
-	 /**
-     * The {@link LiteralFactory} used to create typed RDF literals
-     */
-    private final LiteralFactory literalFactory = LiteralFactory.getInstance();
+	/**
+	 * The default value for the execution of this Engine. Currently set to
+	 * {@link ServiceProperties#ORDERING_POST_PROCESSING} + 90.
+	 * <p>
+	 * This should ensure that this engines runs as one of the first engines of
+	 * the post-processing phase
+	 */
+	public static final Integer defaultOrder = ServiceProperties.ORDERING_POST_PROCESSING - 90;
+
+	/**
+	 * The {@link LiteralFactory} used to create typed RDF literals
+	 */
+	private final LiteralFactory literalFactory = LiteralFactory.getInstance();
 
 	@Reference
 	protected SiteManager siteManager;
@@ -74,21 +83,19 @@ public class FOAFDisambiguationEngine extends
 	 * 
 	 */
 	private Map<UriRef, Set<EntityAnnotation>> suggestionMap = new HashMap<UriRef, Set<EntityAnnotation>>();
-
 	// to detect multiple TextAnnotations mapped to the same EntityAnnotation
 	// key:EntityAnnotationUri, values:TextAnnotations.
 	private Map<UriRef, Set<UriRef>> entityAnnotationMap = new HashMap<UriRef, Set<UriRef>>();
 
 	// for disambiguation..
-	// reference:Set<EntityAnnotation>
+	// key: reference value: Set<EntityAnnotation>
 	private Map<org.apache.stanbol.entityhub.servicesapi.model.Reference, Set<UriRef>> urisReferencedByEntities = new HashMap<org.apache.stanbol.entityhub.servicesapi.model.Reference, Set<UriRef>>();
-	//
 	private Map<UriRef, EntityAnnotation> allEnitityAnnotations = new HashMap<UriRef, EntityAnnotation>();
 
 	@Override
 	public Map<String, Object> getServiceProperties() {
-		// TODO Auto-generated method stub
-		return null;
+		return Collections.unmodifiableMap(Collections.singletonMap(
+				ENHANCEMENT_ENGINE_ORDERING, (Object) defaultOrder));
 	}
 
 	@Override
@@ -114,7 +121,7 @@ public class FOAFDisambiguationEngine extends
 		// TODO Auto-generated method stub
 
 		MGraph graph = ci.getMetadata();
-		AnalysedText at = NlpEngineHelper.getAnalysedText(this, ci, true);
+		// AnalysedText at = NlpEngineHelper.getAnalysedText(this, ci, true);
 
 		Iterator<Triple> it = graph.filter(null, RDF_TYPE,
 				TechnicalClasses.ENHANCER_TEXTANNOTATION);
@@ -134,15 +141,16 @@ public class FOAFDisambiguationEngine extends
 				// if returned suggestion is an entity-annotation proceed with
 				// disambiguation process
 				if (suggestion != null) {
-					// adding new entity annotation to the global map
-					allEnitityAnnotations.put(suggestion.getEntityUri(),
-							suggestion);
-					suggestionSet.add(suggestion);
 					// process entityAnnotation for disambiguation
 					try {
-						//TO DO: need to add disambiguation logic for literal matching with foaf:name and related properties
-						//processFOAFNames(suggestion);
+						// TO DO: need to add disambiguation logic for literal
+						// matching with foaf:name and related properties
+						// processFOAFNames(suggestion);
 						processEntityReferences(suggestion);
+						// adding new entity annotation to the global map
+						allEnitityAnnotations.put(suggestion.getEntityUri(),
+								suggestion);
+						suggestionSet.add(suggestion);
 					} catch (SiteException e) {
 						log.error(e.getMessage());
 						e.printStackTrace();
@@ -174,9 +182,21 @@ public class FOAFDisambiguationEngine extends
 		// calculate link matches
 		caculateLinkMatchesForEntities();
 		performLinksDisambiguation();
-		//writing back to content item
-		applyDisambiguationResults(graph);
-		
+		// writing back to graph
+		ci.getLock().writeLock().lock();
+		try {
+			applyDisambiguationResults(graph);
+		} finally {
+			ci.getLock().writeLock().unlock();
+		}
+		clearEhancementData();
+	}
+
+	public void clearEhancementData() {
+		suggestionMap.clear();
+		entityAnnotationMap.clear();
+		urisReferencedByEntities.clear();
+		allEnitityAnnotations.clear();
 	}
 
 	public Entity getEntityFromEntityHub(EntityAnnotation sug)
@@ -187,7 +207,7 @@ public class FOAFDisambiguationEngine extends
 		// dereferencing the entity from the entityhub
 		if (entityhubSite != null && entityUri != null) {
 			entity = siteManager.getSite(entityhubSite).getEntity(
-					entityUri.toString());
+					entityUri.getUnicodeString());
 		}
 		return entity;
 	}
@@ -221,6 +241,7 @@ public class FOAFDisambiguationEngine extends
 		Representation entityRep = entity.getRepresentation();
 
 		Iterator<String> fields = entityRep.getFieldNames();
+		int linksFromEntity = 0;
 		while (fields.hasNext()) {
 			String field = fields.next();
 			Iterator<org.apache.stanbol.entityhub.servicesapi.model.Reference> urisReferenced = entityRep
@@ -228,6 +249,7 @@ public class FOAFDisambiguationEngine extends
 			while (urisReferenced.hasNext()) {
 				org.apache.stanbol.entityhub.servicesapi.model.Reference uriReference = urisReferenced
 						.next();
+				linksFromEntity++;
 				if (urisReferencedByEntities.containsKey(uriReference)) {
 					Set<UriRef> eas = urisReferencedByEntities
 							.get(uriReference);
@@ -241,6 +263,7 @@ public class FOAFDisambiguationEngine extends
 				}
 			}
 		}
+		entityAnnotation.setLinksFromEntity(linksFromEntity);
 	}
 
 	public void caculateLinkMatchesForEntities() {
@@ -250,6 +273,9 @@ public class FOAFDisambiguationEngine extends
 					.get(uriReference);
 			for (UriRef ea : entityAnnotationsLinked) {
 				if (allEnitityAnnotations.get(ea) != null) {
+					System.out
+							.println("increasing link match for entityAnnot: "
+									+ ea.toString());
 					allEnitityAnnotations.get(ea).increaseLinkMatches();
 				}
 			}
@@ -258,24 +284,40 @@ public class FOAFDisambiguationEngine extends
 
 	public void performLinksDisambiguation() {
 		int allUriLinks = urisReferencedByEntities.keySet().size();
+		System.out.println("All URI links : " + allUriLinks);
+
 		for (EntityAnnotation ea : allEnitityAnnotations.values()) {
-			int linkMatchesByEntity = ea.getLinkMatches();
-			double disambiguationScore = linkMatchesByEntity / allUriLinks;
+			double linkMatchesByEntity = ea.getLinkMatches();
+			double linksFromEntity = ea.getLinksFromEntity();
+			double disambiguationScore = (linkMatchesByEntity / allUriLinks)
+					* (linksFromEntity / allUriLinks);
+			System.out.println("ea :" + ea.getEntityLabel() + " site: "
+					+ ea.getSite() + " link matches: " + ea.getLinkMatches()
+					+ " links from entitty: " + ea.getLinksFromEntity()
+					+ "dis-score: " + disambiguationScore);
 			ea.setDisambiguationScore(disambiguationScore);
+			// change the confidence
+			ea.calculateDisambiguatedConfidence(allUriLinks);
 		}
 	}
 
-	public void applyDisambiguationResults(MGraph graph){
-		
-		for(EntityAnnotation ea : allEnitityAnnotations.values()){
-			
-			ea.calculateDisambiguatedConfidence(urisReferencedByEntities.keySet().size());
-			 // change the confidence
-            EnhancementEngineHelper.set(graph, ea.getUriLink(), ENHANCER_CONFIDENCE,
-               ea.getDisambiguatedConfidence(), literalFactory);
-            EnhancementEngineHelper.addContributingEngine(graph, ea.getUriLink(), this);
+	public void applyDisambiguationResults(MGraph graph) {
+		for (EntityAnnotation ea : allEnitityAnnotations.values()) {
+			System.out.println("ea : " + ea.getEntityLabel()
+					+ " originalconf: " + ea.getOriginalConfidnece().toString()
+					+ "no of links from entity: " + ea.getLinksFromEntity()
+					+ " no of matches : " + ea.getLinkMatches()
+					+ " dis-score :" + ea.getDisambiguationScore()
+					+ " disamb-conf: "
+					+ ea.getDisambiguatedConfidence().toString());
+			EnhancementEngineHelper.set(graph, ea.getUriLink(),
+					ENHANCER_CONFIDENCE, ea.getDisambiguatedConfidence(),
+					literalFactory);
+			EnhancementEngineHelper.addContributingEngine(graph,
+					ea.getUriLink(), this);
 		}
 	}
+
 	/**
 	 * Activate and read the properties
 	 * 

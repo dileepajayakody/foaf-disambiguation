@@ -79,6 +79,7 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	// (no.of.matches/total matches)
 	private Double disambiguationScore;
 	private int linkMatches;
+	private int linksFromEntity;
 	private Double disambiguatedConfidence;
 	private String site;
 	private String entityType;
@@ -132,7 +133,6 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	}
 
 	public void calculateDisambiguatedConfidence(int allLinks) {
-		this.disambiguationScore = (double) (linkMatches / allLinks);
 		this.disambiguatedConfidence = (originalConfidnece * confidenceWeight)
 				+ (disambiguationScore * disambiguationWeight);
 	}
@@ -259,6 +259,14 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 
 	public void setLinkMatches(int linkMatches) {
 		this.linkMatches = linkMatches;
+	}
+
+	public void setLinksFromEntity(int linksFromEntity) {
+		this.linksFromEntity = linksFromEntity;
+	}
+
+	public int getLinksFromEntity() {
+		return linksFromEntity;
 	}
 
 	@Override
