@@ -77,15 +77,11 @@ public class FOAFDisambiguationEngine extends
 
 	@Reference
 	protected NamespacePrefixService namespacePrefixService;
-	/**
-	 * Stores the URIs of fise:TextAnnnotation as key and the
-	 * fise:EntityAnnotation they link to as value.
-	 * 
-	 */
-	private Map<UriRef, Set<EntityAnnotation>> suggestionMap = new HashMap<UriRef, Set<EntityAnnotation>>();
+	
+	//private Map<UriRef, Set<EntityAnnotation>> suggestionMap = new HashMap<UriRef, Set<EntityAnnotation>>();
 	// to detect multiple TextAnnotations mapped to the same EntityAnnotation
 	// key:EntityAnnotationUri, values:TextAnnotations.
-	private Map<UriRef, Set<UriRef>> entityAnnotationMap = new HashMap<UriRef, Set<UriRef>>();
+	//private Map<UriRef, Set<UriRef>> entityAnnotationMap = new HashMap<UriRef, Set<UriRef>>();
 
 	// for disambiguation..
 	// key: reference value: Set<EntityAnnotation>
@@ -127,7 +123,7 @@ public class FOAFDisambiguationEngine extends
 				TechnicalClasses.ENHANCER_TEXTANNOTATION);
 		while (it.hasNext()) {
 			UriRef textAnnotation = (UriRef) it.next().getSubject();
-			Set<EntityAnnotation> suggestionSet = new TreeSet<EntityAnnotation>();
+			//Set<EntityAnnotation> suggestionSet = new TreeSet<EntityAnnotation>();
 
 			// NOTE: this iterator will also include dc:relation between
 			// fise:TextAnnotation's
@@ -150,7 +146,7 @@ public class FOAFDisambiguationEngine extends
 						// adding new entity annotation to the global map
 						allEnitityAnnotations.put(suggestion.getEntityUri(),
 								suggestion);
-						suggestionSet.add(suggestion);
+						//suggestionSet.add(suggestion);
 					} catch (SiteException e) {
 						log.error(e.getMessage());
 						e.printStackTrace();
@@ -159,17 +155,17 @@ public class FOAFDisambiguationEngine extends
 					// maintaining the set of multiple textAnnotations for a
 					// single entityAnnotation <entityAnnotation:
 					// Set<textAnnotation>>
-					if (entityAnnotationMap.get(link) != null) {
+					/*if (entityAnnotationMap.get(link) != null) {
 						entityAnnotationMap.get(link).add(textAnnotation);
 					} else {
 						Set<UriRef> textAnnotations = new TreeSet<UriRef>();
 						textAnnotations.add(textAnnotation);
 						entityAnnotationMap.put(link, textAnnotations);
-					}
+					}*/
 				}
 			}
 
-			if (suggestionSet.isEmpty()) {
+			/*if (suggestionSet.isEmpty()) {
 				log.warn("TextAnnotation" + textAnnotation
 						+ "has no suggestions.");
 				// return null; // nothing to disambiguate
@@ -177,7 +173,7 @@ public class FOAFDisambiguationEngine extends
 				// putting suggestions for a textAnnotation
 				// textAnnotation:suggestions
 				suggestionMap.put(textAnnotation, suggestionSet);
-			}
+			}*/
 		}
 		// calculate link matches
 		caculateLinkMatchesForEntities();
@@ -193,8 +189,6 @@ public class FOAFDisambiguationEngine extends
 	}
 
 	public void clearEhancementData() {
-		suggestionMap.clear();
-		entityAnnotationMap.clear();
 		urisReferencedByEntities.clear();
 		allEnitityAnnotations.clear();
 	}
@@ -250,6 +244,7 @@ public class FOAFDisambiguationEngine extends
 				org.apache.stanbol.entityhub.servicesapi.model.Reference uriReference = urisReferenced
 						.next();
 				linksFromEntity++;
+				System.out.println("processing uriReference : "+ uriReference.getReference() + " from entity: " + entityAnnotation.getEntityUri().getUnicodeString());
 				if (urisReferencedByEntities.containsKey(uriReference)) {
 					Set<UriRef> eas = urisReferencedByEntities
 							.get(uriReference);
@@ -296,7 +291,7 @@ public class FOAFDisambiguationEngine extends
 					+ " links from entitty: " + ea.getLinksFromEntity()
 					+ "dis-score: " + disambiguationScore);
 			ea.setDisambiguationScore(disambiguationScore);
-			// change the confidence
+			//update the confidence
 			ea.calculateDisambiguatedConfidence(allUriLinks);
 		}
 	}
