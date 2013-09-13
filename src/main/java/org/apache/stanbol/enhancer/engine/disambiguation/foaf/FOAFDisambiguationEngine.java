@@ -85,7 +85,7 @@ public class FOAFDisambiguationEngine extends
 
 	// for disambiguation..
 	// key: reference value: Set<EntityAnnotation>
-	private Map<org.apache.stanbol.entityhub.servicesapi.model.Reference, Set<UriRef>> urisReferencedByEntities = new HashMap<org.apache.stanbol.entityhub.servicesapi.model.Reference, Set<UriRef>>();
+	private Map<String, Set<UriRef>> urisReferencedByEntities = new HashMap<String, Set<UriRef>>();
 	private Map<UriRef, EntityAnnotation> allEnitityAnnotations = new HashMap<UriRef, EntityAnnotation>();
 
 	@Override
@@ -244,17 +244,18 @@ public class FOAFDisambiguationEngine extends
 				org.apache.stanbol.entityhub.servicesapi.model.Reference uriReference = urisReferenced
 						.next();
 				linksFromEntity++;
-				System.out.println("processing uriReference : "+ uriReference.getReference() + " from entity: " + entityAnnotation.getEntityUri().getUnicodeString());
-				if (urisReferencedByEntities.containsKey(uriReference)) {
+				System.out.println("processing uriReference : "+ uriReference.getReference() + " from entity: " + entityAnnotation.getEntityUri().getUnicodeString() + " for field : " + field);
+				String referenceString = uriReference.getReference();
+				if (urisReferencedByEntities.containsKey(referenceString)) {
 					Set<UriRef> eas = urisReferencedByEntities
-							.get(uriReference);
+							.get(referenceString);
 					eas.add(entityAnnotation.getEntityUri());
-					urisReferencedByEntities.put(uriReference, eas);
+					urisReferencedByEntities.put(referenceString, eas);
 				} else {
 					Set<UriRef> eas = new HashSet<UriRef>();
 					eas.add(entityAnnotation.getEntityUri());
 					// key:link, value:entityAnnotation set referencing link
-					urisReferencedByEntities.put(uriReference, eas);
+					urisReferencedByEntities.put(referenceString, eas);
 				}
 			}
 		}
@@ -262,7 +263,7 @@ public class FOAFDisambiguationEngine extends
 	}
 
 	public void caculateLinkMatchesForEntities() {
-		for (org.apache.stanbol.entityhub.servicesapi.model.Reference uriReference : urisReferencedByEntities
+		for (String uriReference : urisReferencedByEntities
 				.keySet()) {
 			Set<UriRef> entityAnnotationsLinked = urisReferencedByEntities
 					.get(uriReference);
