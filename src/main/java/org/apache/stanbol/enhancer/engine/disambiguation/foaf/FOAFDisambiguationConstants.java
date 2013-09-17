@@ -3,7 +3,7 @@ package org.apache.stanbol.enhancer.engine.disambiguation.foaf;
 import org.apache.clerezza.rdf.core.UriRef;
 import org.apache.stanbol.enhancer.servicesapi.rdf.NamespaceEnum;
 
-public class FOAFDisambiguationData {
+public class FOAFDisambiguationConstants {
 
 	//have to use NamespacePrefixService from the engine..
     public static final UriRef FOAF_PERSON = new UriRef(NamespaceEnum.foaf

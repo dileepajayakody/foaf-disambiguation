@@ -76,11 +76,14 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 
 	private Entity entity;
 	// the match count in the references extracted from the context
-	// (no.of.matches/total matches)
-	private Double disambiguationScore;
+	// (no.of.matches/total links)
+	private Double entityReferenceDisambiguationScore = 0.0;
+	private Double foafNameDisambiguationScore = 0.0;
+	private Double disambiguatedConfidence = 0.0;
+	private Double entityReferenceDisambiguatedConfidence = 0.0;
+	private Double foafNameDisambiguatedConfidence = 0.0;
 	private int linkMatches;
 	private int linksFromEntity;
-	private Double disambiguatedConfidence;
 	private String site;
 	private String entityType;
 	private String entityLabel;
@@ -132,9 +135,18 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 		return entityAnnotation;
 	}
 
-	public void calculateDisambiguatedConfidence(int allLinks) {
+	public void calculateDisambiguatedConfidence() {
 		this.disambiguatedConfidence = (originalConfidnece * confidenceWeight)
-				+ (disambiguationScore * disambiguationWeight);
+				+ this.foafNameDisambiguatedConfidence
+				+ this.entityReferenceDisambiguatedConfidence;
+	}
+
+	public void calculateFoafNameDisambiguatedConfidence() {
+		this.foafNameDisambiguatedConfidence = (foafNameDisambiguationScore * disambiguationWeight);
+	}
+
+	public void calculateEntityReferenceDisambiguatedConfidence() {
+		this.entityReferenceDisambiguatedConfidence = (entityReferenceDisambiguationScore * disambiguationWeight);
 	}
 
 	/**
@@ -232,12 +244,12 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 		return entityLabel;
 	}
 
-	public Double getDisambiguationScore() {
-		return disambiguationScore;
+	public Double getEntityReferenceDisambiguationScore() {
+		return entityReferenceDisambiguationScore;
 	}
 
-	public void setDisambiguationScore(Double disambiguationScore) {
-		this.disambiguationScore = disambiguationScore;
+	public void setEntityReferenceDisambiguationScore(Double disambiguationScore) {
+		this.entityReferenceDisambiguationScore = disambiguationScore;
 	}
 
 	/**
@@ -267,6 +279,33 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 
 	public int getLinksFromEntity() {
 		return linksFromEntity;
+	}
+
+	public void setFoafNameDisambiguationScore(
+			Double foafNameDisambiguationScore) {
+		this.foafNameDisambiguationScore = foafNameDisambiguationScore;
+	}
+
+	public Double getFoafNameDisambiguationScore() {
+		return foafNameDisambiguationScore;
+	}
+
+	public void setEntityReferenceDisambiguatedConfidence(
+			Double entityReferenceDisambiguatedConfidence) {
+		this.entityReferenceDisambiguatedConfidence = entityReferenceDisambiguatedConfidence;
+	}
+
+	public Double getEntityReferenceDisambiguatedConfidence() {
+		return entityReferenceDisambiguatedConfidence;
+	}
+
+	public void setFoafNameDisambiguatedConfidence(
+			Double foafNameDisambiguatedConfidence) {
+		this.foafNameDisambiguatedConfidence = foafNameDisambiguatedConfidence;
+	}
+
+	public Double getFoafNameDisambiguatedConfidence() {
+		return foafNameDisambiguatedConfidence;
 	}
 
 	@Override
