@@ -77,14 +77,6 @@ public class FOAFDisambiguationEngine extends
 	@Reference
 	protected NamespacePrefixService namespacePrefixService;
 
-	// private Map<UriRef, Set<EntityAnnotation>> suggestionMap = new
-	// HashMap<UriRef, Set<EntityAnnotation>>();
-	// to detect multiple TextAnnotations mapped to the same EntityAnnotation
-	// key:EntityAnnotationUri, values:TextAnnotations.
-	// private Map<UriRef, Set<UriRef>> entityAnnotationMap = new
-	// HashMap<UriRef, Set<UriRef>>();
-
-	// for disambiguation..
 	// key: reference value: Set<EntityAnnotation>
 	private Map<String, Set<UriRef>> urisReferencedByEntities = new HashMap<String, Set<UriRef>>();
 	private Map<UriRef, EntityAnnotation> allEnitityAnnotations = new HashMap<UriRef, EntityAnnotation>();
@@ -116,15 +108,10 @@ public class FOAFDisambiguationEngine extends
 	@Override
 	public void computeEnhancements(ContentItem ci) throws EngineException {
 		MGraph graph = ci.getMetadata();
-		// AnalysedText at = NlpEngineHelper.getAnalysedText(this, ci, true);
-
 		Iterator<Triple> it = graph.filter(null, RDF_TYPE,
 				TechnicalClasses.ENHANCER_TEXTANNOTATION);
 		while (it.hasNext()) {
 			UriRef textAnnotation = (UriRef) it.next().getSubject();
-			// Set<EntityAnnotation> suggestionSet = new
-			// TreeSet<EntityAnnotation>();
-
 			// NOTE: this iterator will also include dc:relation between
 			// fise:TextAnnotation's
 			Iterator<Triple> relatedLinks = graph.filter(null, DC_RELATION,
@@ -154,27 +141,8 @@ public class FOAFDisambiguationEngine extends
 						log.error(e.getMessage());
 						e.printStackTrace();
 					}
-
-					// maintaining the set of multiple textAnnotations for a
-					// single entityAnnotation <entityAnnotation:
-					// Set<textAnnotation>>
-					/*
-					 * if (entityAnnotationMap.get(link) != null) {
-					 * entityAnnotationMap.get(link).add(textAnnotation); } else
-					 * { Set<UriRef> textAnnotations = new TreeSet<UriRef>();
-					 * textAnnotations.add(textAnnotation);
-					 * entityAnnotationMap.put(link, textAnnotations); }
-					 */
 				}
 			}
-
-			/*
-			 * if (suggestionSet.isEmpty()) { log.warn("TextAnnotation" +
-			 * textAnnotation + "has no suggestions."); // return null; //
-			 * nothing to disambiguate } else { // putting suggestions for a
-			 * textAnnotation // textAnnotation:suggestions
-			 * suggestionMap.put(textAnnotation, suggestionSet); }
-			 */
 		}
 		// calculate link matches
 		caculateLinkMatchesForEntities();
@@ -210,25 +178,14 @@ public class FOAFDisambiguationEngine extends
 	public void processFOAFNameDisambiguation(EntityAnnotation ea,
 			Iterator<Triple> selectedTextsTriples) throws SiteException {
 		Entity entity = this.getEntityFromEntityHub(ea);
-		String entityLabel = ea.getEntityLabel();
-		if (entityLabel != null) {
-			// substring entityLabel from @language index eg: Bob Marley@en
-			if (entityLabel.indexOf('@') != -1) {
-				entityLabel = ea.getEntityLabel().substring(0,
-						ea.getEntityLabel().indexOf('@'));
-			}
-		}
-		// need to match fise:TextAnnotation with the entity's foaf:name
 		Representation entityRep = entity.getRepresentation();
 		Text foafNameText = ((Text) entityRep
 				.getFirst(FOAFDisambiguationConstants.FOAF_NAME
 						.getUnicodeString()));
 		if (foafNameText != null) {
 			String foafName = foafNameText.getText();
-			System.out.println("The foaf name value is : " + foafName);
 			// if the selected-text matches exactly with the foaf-name then
-			// increase
-			// the ds by 1
+			// increase the ds by 1
 			Double foafNameScore = 0.0;
 			while (selectedTextsTriples.hasNext()) {
 				String selectedText = ((Literal) selectedTextsTriples.next()
@@ -236,9 +193,7 @@ public class FOAFDisambiguationEngine extends
 				if (foafName != null) {
 					if (selectedText.equalsIgnoreCase(foafName)) {
 						foafNameScore++;
-						System.out
-								.println("the foaf name matches with selectedText..increasing foafNamesScore:"
-										+ foafNameScore);
+						break;
 					}
 				}
 
@@ -246,25 +201,12 @@ public class FOAFDisambiguationEngine extends
 			ea.setFoafNameDisambiguationScore(foafNameScore);
 			ea.calculateFoafNameDisambiguatedConfidence();
 		}
-
-		// use these in a disambiguation score order
-		Iterator<Text> fName = entityRep
-				.getText(FOAFDisambiguationConstants.FOAF_FIRST_NAME
-						.getUnicodeString());
-		Iterator<Text> gName = entityRep
-				.getText(FOAFDisambiguationConstants.FOAF_GIVEN_NAME
-						.getUnicodeString());
-		Iterator<Text> surName = entityRep
-				.getText(FOAFDisambiguationConstants.FOAF_SURNAME
-						.getUnicodeString());
-
 	}
 
 	public void processEntityReferences(EntityAnnotation entityAnnotation)
 			throws SiteException {
 		Entity entity = this.getEntityFromEntityHub(entityAnnotation);
 		Representation entityRep = entity.getRepresentation();
-
 		Iterator<String> fields = entityRep.getFieldNames();
 		int linksFromEntity = 0;
 		while (fields.hasNext()) {
@@ -275,10 +217,10 @@ public class FOAFDisambiguationEngine extends
 				org.apache.stanbol.entityhub.servicesapi.model.Reference uriReference = urisReferenced
 						.next();
 				linksFromEntity++;
-				System.out.println("processing uriReference : "
+				/*System.out.println("processing uriReference : "
 						+ uriReference.getReference() + "\n from entity: "
 						+ entityAnnotation.getEntityUri().getUnicodeString()
-						+ "\n for field : " + field + "\n");
+						+ "\n for field : " + field + "\n");*/
 				String referenceString = uriReference.getReference();
 				if (urisReferencedByEntities.containsKey(referenceString)) {
 					Set<UriRef> eas = urisReferencedByEntities
@@ -302,9 +244,6 @@ public class FOAFDisambiguationEngine extends
 					.get(uriReference);
 			for (UriRef ea : entityAnnotationsLinked) {
 				if (allEnitityAnnotations.get(ea) != null) {
-					System.out
-							.println("increasing link match for entityAnnot: "
-									+ ea.toString());
 					allEnitityAnnotations.get(ea).increaseLinkMatches();
 				}
 			}
@@ -323,36 +262,29 @@ public class FOAFDisambiguationEngine extends
 			int allUriLinks) {
 		double linkMatchesByEntity = ea.getLinkMatches();
 		double linksFromEntity = ea.getLinksFromEntity();
-		double disambiguationScore = (linkMatchesByEntity / allUriLinks)
-				* (linksFromEntity / allUriLinks);
-		System.out.println("ea :" + ea.getEntityLabel() + " site: "
-				+ ea.getSite() + " link matches: " + ea.getLinkMatches()
-				+ " links from entitty: " + ea.getLinksFromEntity()
-				+ "dis-score: " + disambiguationScore);
+		double disambiguationScore = ((linkMatchesByEntity / linksFromEntity) / allUriLinks);
 		ea.setEntityReferenceDisambiguationScore(disambiguationScore);
 		// update the confidence
 		ea.calculateEntityReferenceDisambiguatedConfidence();
 	}
 
 	public void applyDisambiguationResults(MGraph graph) {
-		System.out
-				.println("In applyDisResults the size of allEntityAnnotations : "
-						+ allEnitityAnnotations.size());
 		for (EntityAnnotation ea : allEnitityAnnotations.values()) {
 			// calculate total dc
 			ea.calculateDisambiguatedConfidence();
-			System.out.println("ea : " + ea.getEntityLabel()
-					+ " originalconf: " + ea.getOriginalConfidnece().toString()
-					+ "no of links from entity: " + ea.getLinksFromEntity()
-					+ " no of matches : " + ea.getLinkMatches()
-					+ " dis-score :"
+	/*		System.out.println("\n\nEntity : " + ea.getEntityLabel()
+					+ "\n site: " + ea.getSite() + "\n originalconf: "
+					+ ea.getOriginalConfidnece().toString()
+					+ "\n no of links from entity: " + ea.getLinksFromEntity()
+					+ "\n no of matches : " + ea.getLinkMatches()
+					+ "\n  entity ref-dis-score :"
 					+ ea.getEntityReferenceDisambiguationScore()
-					+ " foaf name disamb-conf: "
+					+ "\n foaf name disamb-conf: "
+					+ ea.getFoafNameDisambiguatedConfidence().toString()
+					+ "\n entity reference disamb-conf: "
 					+ ea.getEntityReferenceDisambiguatedConfidence().toString()
-					+ " entity reference disamb-conf: "
-					+ ea.getDisambiguatedConfidence().toString()
-					+ " disamb-conf: "
-					+ ea.getDisambiguatedConfidence().toString());
+					+ "\n Total disamb-conf: "
+					+ ea.getDisambiguatedConfidence().toString());*/
 			EnhancementEngineHelper.set(graph, ea.getUriLink(),
 					ENHANCER_CONFIDENCE, ea.getDisambiguatedConfidence(),
 					literalFactory);

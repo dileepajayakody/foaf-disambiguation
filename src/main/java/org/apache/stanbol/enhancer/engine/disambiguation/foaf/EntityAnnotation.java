@@ -71,12 +71,9 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 
 	private UriRef uriLink;
 	private UriRef entityUri;
-
-	private Double originalConfidnece;
-
 	private Entity entity;
-	// the match count in the references extracted from the context
-	// (no.of.matches/total links)
+
+	private Double originalConfidence = 0.0;
 	private Double entityReferenceDisambiguationScore = 0.0;
 	private Double foafNameDisambiguationScore = 0.0;
 	private Double disambiguatedConfidence = 0.0;
@@ -118,13 +115,13 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 					Properties.ENHANCER_ENTITY_REFERENCE);
 			return null;
 		}
-		entityAnnotation.originalConfidnece = EnhancementEngineHelper.get(
+		entityAnnotation.originalConfidence = EnhancementEngineHelper.get(
 				graph, uri, Properties.ENHANCER_CONFIDENCE, Double.class, lf);
-		if (entityAnnotation.originalConfidnece == null) {
+		if (entityAnnotation.originalConfidence == null) {
 			log.warn("EntityAnnotation {} does not define a value for "
 					+ "property {}. Will use '0' as fallback", uri,
 					Properties.ENHANCER_CONFIDENCE);
-			entityAnnotation.originalConfidnece = 0.0;
+			entityAnnotation.originalConfidence = 0.0;
 		}
 		entityAnnotation.site = EnhancementEngineHelper.getString(graph, uri,
 				ENTITYHUB_SITE);
@@ -136,9 +133,14 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	}
 
 	public void calculateDisambiguatedConfidence() {
-		this.disambiguatedConfidence = (originalConfidnece * confidenceWeight)
+		Double totalConfidence = (originalConfidence * confidenceWeight)
 				+ this.foafNameDisambiguatedConfidence
 				+ this.entityReferenceDisambiguatedConfidence;
+		if (totalConfidence > 1.0) {
+			this.disambiguatedConfidence = 1.0;
+		} else {
+			this.disambiguatedConfidence = totalConfidence;
+		}
 	}
 
 	public void calculateFoafNameDisambiguatedConfidence() {
@@ -193,7 +195,7 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	 * @return
 	 */
 	public Double getOriginalConfidnece() {
-		return originalConfidnece;
+		return originalConfidence;
 	}
 
 	/**
@@ -336,9 +338,9 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 				&& other.disambiguatedConfidence != null) {
 			result = other.disambiguatedConfidence
 					.compareTo(disambiguatedConfidence);
-		} else if (other.originalConfidnece != null
-				&& originalConfidnece != null) {
-			result = other.originalConfidnece.compareTo(originalConfidnece);
+		} else if (other.originalConfidence != null
+				&& originalConfidence != null) {
+			result = other.originalConfidence.compareTo(originalConfidence);
 		} else {
 			result = 0;
 		}
