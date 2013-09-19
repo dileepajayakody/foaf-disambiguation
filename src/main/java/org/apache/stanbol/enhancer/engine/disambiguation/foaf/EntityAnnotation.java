@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * An abstraction of an EntityAnnotation
+ * 
+ * @author Dileepa Jayakody
  */
 public class EntityAnnotation implements Comparable<EntityAnnotation> {
 
@@ -80,7 +82,7 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	private Double entityReferenceDisambiguatedConfidence = 0.0;
 	private Double foafNameDisambiguatedConfidence = 0.0;
 	//the score assigned based on the number of uri co-references with other entities
-	private int coReferenceScore;
+	private int correlationScore;
 	private int referencesFromEntity;
 	private String site;
 	private String entityType;
@@ -264,12 +266,12 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 		this.disambiguatedConfidence = disambiguatedConfidence;
 	}
 
-	public void increaseCoRefScore(int corefEntities) {
-		this.coReferenceScore+=corefEntities;
+	public void increaseCorrelationScore(int corefEntities) {
+		this.correlationScore+=corefEntities;
 	}
 
-	public int getCoRefScore() {
-		return coReferenceScore;
+	public int getCorrelationScore() {
+		return correlationScore;
 	}
 
 	public void setReferencesFromEntity(int linksFromEntity) {

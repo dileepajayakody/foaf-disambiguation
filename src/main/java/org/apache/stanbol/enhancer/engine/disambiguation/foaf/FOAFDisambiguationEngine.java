@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The FOAF Disambiguation Engine analyses the connected-ness of the entities
- * suggested in a content item by identifying co-referencing URI references of
+ * suggested in a content item by identifying correlated URI references of
  * the entities. The fise:confidence of the entities are increased with the
  * number of matches of references with other entities.
  * 
@@ -158,7 +158,7 @@ public class FOAFDisambiguationEngine extends
 			}
 		}
 		// calculate link matches
-		caculateLinkMatchesForEntities();
+		caculateURICorrelationScoreForEntities();
 		disambiguateEntityReferences();
 		// writing back to graph
 		ci.getLock().writeLock().lock();
@@ -277,19 +277,19 @@ public class FOAFDisambiguationEngine extends
 
 	/**
 	 * <p>
-	 * Finds the number of co-references for each URI-Reference and add that
-	 * score to co-referencing entities
+	 * Counts the number of correlated URI-References and add that
+	 * score to correlated entities
 	 * </p>
 	 */
-	public void caculateLinkMatchesForEntities() {
+	public void caculateURICorrelationScoreForEntities() {
 		for (String uriReference : urisReferencedByEntities.keySet()) {
 			Set<UriRef> entityAnnotationsLinked = urisReferencedByEntities
 					.get(uriReference);
-			int linkScoreForURI = entityAnnotationsLinked.size();
+			int correlationScoreForURI = entityAnnotationsLinked.size();
 			for (UriRef ea : entityAnnotationsLinked) {
 				if (allEnitityAnnotations.get(ea) != null) {
-					allEnitityAnnotations.get(ea).increaseCoRefScore(
-							linkScoreForURI);
+					allEnitityAnnotations.get(ea).increaseCorrelationScore(
+							correlationScoreForURI);
 				}
 			}
 		}
@@ -305,9 +305,9 @@ public class FOAFDisambiguationEngine extends
 
 	public void performEntityReferenceDisambiguation(EntityAnnotation ea,
 			int allUriReferences) {
-		double coreferenceScoreForEntity = ea.getCoRefScore();
+		double correlationScoreForEntity = ea.getCorrelationScore();
 		double refsFromEntity = ea.getReferencesFromEntity();
-		double disambiguationScore = ((coreferenceScoreForEntity - refsFromEntity) / allUriReferences);
+		double disambiguationScore = ((correlationScoreForEntity - refsFromEntity) / allUriReferences);
 		ea.setEntityReferenceDisambiguationScore(disambiguationScore);
 		// update the confidence
 		ea.calculateEntityReferenceDisambiguatedConfidence();
