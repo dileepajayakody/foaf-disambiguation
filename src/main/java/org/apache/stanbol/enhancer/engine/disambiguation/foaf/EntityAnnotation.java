@@ -79,8 +79,9 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	private Double disambiguatedConfidence = 0.0;
 	private Double entityReferenceDisambiguatedConfidence = 0.0;
 	private Double foafNameDisambiguatedConfidence = 0.0;
-	private int linkMatches;
-	private int linksFromEntity;
+	//the score assigned based on the number of uri co-references with other entities
+	private int coReferenceScore;
+	private int referencesFromEntity;
 	private String site;
 	private String entityType;
 	private String entityLabel;
@@ -96,12 +97,12 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	}
 
 	/**
-	 * Allows to create Suggestions from existing fise:TextAnnotation contained
+	 * Allows to create EntityAnnotations from existing fise:TextAnnotation contained
 	 * in the metadata of the processed {@link ContentItem}
 	 * 
 	 * @param graph
 	 * @param uri
-	 * @return
+	 * @return EntityAnnotation
 	 */
 	public static EntityAnnotation createFromUri(TripleCollection graph,
 			UriRef uri) {
@@ -263,24 +264,20 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 		this.disambiguatedConfidence = disambiguatedConfidence;
 	}
 
-	public void increaseLinkMatches() {
-		this.linkMatches++;
+	public void increaseCoRefScore(int corefEntities) {
+		this.coReferenceScore+=corefEntities;
 	}
 
-	public int getLinkMatches() {
-		return linkMatches;
+	public int getCoRefScore() {
+		return coReferenceScore;
 	}
 
-	public void setLinkMatches(int linkMatches) {
-		this.linkMatches = linkMatches;
+	public void setReferencesFromEntity(int linksFromEntity) {
+		this.referencesFromEntity = linksFromEntity;
 	}
 
-	public void setLinksFromEntity(int linksFromEntity) {
-		this.linksFromEntity = linksFromEntity;
-	}
-
-	public int getLinksFromEntity() {
-		return linksFromEntity;
+	public int getReferencesFromEntity() {
+		return referencesFromEntity;
 	}
 
 	public void setFoafNameDisambiguationScore(
