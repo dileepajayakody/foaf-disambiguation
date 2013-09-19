@@ -7,8 +7,8 @@ The engine's main functionality is to increase the confidence of Entity-Annotati
 1. Processing co-referencing URI references in the Entities to detect connected-ness<br/>
 2. Processing foaf:name comparison with fise:selected-text
 
-The main objective of processing co-referencing URIs is to increase the confidence of the most 'connected' entity from the suggested entities. 
-All URI/Reference type fields of the entities are extracted and processed to find co-references with other entities suggested. The most connected entity will have the most number of URI matches, and the disambiguated-confidence will be increased accordingly.
+The main objective is to identify correlated URIs between entities and increase the confidence of the most 'connected' entity from the suggested entities. 
+All URI/Reference type fields of the entities are extracted and processed to find correlations with other entities suggested. The most connected entity will have the most number of URI correlations, and the disambiguated-confidence will be increased accordingly.
 
 The second technique used is literal matching of foaf:name field of the entity with the fise:selected-texts in the content. With an exact match, the disambiguated-confidence will be increased. Finally the cumulative disambiguated-confidence is calculated and adjusted.
 
