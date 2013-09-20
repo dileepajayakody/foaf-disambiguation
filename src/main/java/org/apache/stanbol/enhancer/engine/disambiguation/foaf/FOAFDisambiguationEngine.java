@@ -312,32 +312,35 @@ public class FOAFDisambiguationEngine extends
 		int correlationScoreForEntity = ea.getCorrelationScore();
 		int refsFromEntity = ea.getReferencesFromEntity();
 		int correlationsWithOtherEntities = correlationScoreForEntity - refsFromEntity;
-		double disambiguationScore = (correlationsWithOtherEntities / allUriReferences);
-		ea.setEntityReferenceDisambiguationScore(disambiguationScore);
+		//double disambiguationScore = (correlationsWithOtherEntities / allUriReferences);
+		ea.setCorrelationScore(correlationsWithOtherEntities);
 	}
 
 	public void applyDisambiguationResults(MGraph graph) {
 		int max = this.correlationScoresOfEntities.last();
 		int min = this.correlationScoresOfEntities.first();
+		//System.out.println("CorrelationScores max :"+ max + " min :" + min);
 		for (EntityAnnotation ea : allEnitityAnnotations.values()) {
 			// calculate total dc
 			ea.calculateFoafNameDisambiguatedConfidence();
 			ea.calculateEntityReferenceDisambiguatedConfidence(max, min);
 			ea.calculateDisambiguatedConfidence();
-			/*
-			 * System.out.println("\n\nEntity : " + ea.getEntityLabel() +
-			 * "\n site: " + ea.getSite() + "\n originalconf: " +
-			 * ea.getOriginalConfidnece().toString() +
-			 * "\n no of links from entity: " + ea.getLinksFromEntity() +
-			 * "\n no of matches : " + ea.getLinkMatches() +
-			 * "\n  entity ref-dis-score :" +
-			 * ea.getEntityReferenceDisambiguationScore() +
-			 * "\n foaf name disamb-conf: " +
-			 * ea.getFoafNameDisambiguatedConfidence().toString() +
-			 * "\n entity reference disamb-conf: " +
-			 * ea.getEntityReferenceDisambiguatedConfidence().toString() +
-			 * "\n Total disamb-conf: " +
-			 * ea.getDisambiguatedConfidence().toString());
+		/*	
+			  System.out.println("\n\nEntity : " + ea.getEntityLabel() +
+			  "\n site: " + ea.getSite() + "\n originalconf: " +
+			  ea.getOriginalConfidnece().toString() +
+			  "\n no of links from entity: " + ea.getReferencesFromEntity() +
+			  "\n  entity foafname-score :" +
+			  ea.getFoafNameDisambiguationScore() +
+			  "\n no of matches : " + ea.getCorrelationScore() +
+			  "\n  entity correlation-score :" +
+			  ea.getCorrelationScore() +
+			  "\n foaf name disamb-conf: " +
+			  ea.getFoafNameDisambiguatedConfidence().toString() +
+			  "\n entity reference disamb-conf: " +
+			  ea.getEntityReferenceDisambiguatedConfidence().toString() +
+			  "\n Total disamb-conf: " +
+			  ea.getDisambiguatedConfidence().toString());
 			 */
 			EnhancementEngineHelper.set(graph, ea.getUriLink(),
 					ENHANCER_CONFIDENCE, ea.getDisambiguatedConfidence(),

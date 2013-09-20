@@ -84,7 +84,7 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	private Entity entity;
 
 	private Double originalConfidence = 0.0;
-	private Double entityReferenceDisambiguationScore = 0.0;
+	//private Double entityReferenceDisambiguationScore = 0.0;
 	private Double foafNameDisambiguationScore = 0.0;
 	private Double disambiguatedConfidence = 0.0;
 	private Double entityReferenceDisambiguatedConfidence = 0.0;
@@ -161,7 +161,7 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	 * @param minimum correlation score of entities int min
 	 */
 	public void calculateEntityReferenceDisambiguatedConfidence(int max, int min) {
-		double normalizedCorrelationScore = (entityReferenceDisambiguationScore - min)/(max - min);
+		double normalizedCorrelationScore = (correlationScore - min)/(max - min);
 		this.entityReferenceDisambiguatedConfidence = (normalizedCorrelationScore * uriCorrelationDisambiguationWeight);
 	}
 
@@ -260,12 +260,10 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 		return entityLabel;
 	}
 
-	public Double getEntityReferenceDisambiguationScore() {
-		return entityReferenceDisambiguationScore;
-	}
+	
 
-	public void setEntityReferenceDisambiguationScore(Double disambiguationScore) {
-		this.entityReferenceDisambiguationScore = disambiguationScore;
+	public void setCorrelationScore(int correlationScore) {
+		this.correlationScore = correlationScore;
 	}
 
 	/**
