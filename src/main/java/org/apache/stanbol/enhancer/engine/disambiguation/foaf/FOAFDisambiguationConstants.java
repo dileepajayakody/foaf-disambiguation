@@ -12,8 +12,6 @@ public class FOAFDisambiguationConstants {
     public static final UriRef FOAF_ORGANIZATION = new UriRef(NamespaceEnum.foaf
             + "Organization");
 
-
-
    public static final UriRef DBPEDIA_PERSON = new UriRef(NamespaceEnum.dbpedia_ont
            + "Person");
    

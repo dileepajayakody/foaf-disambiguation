@@ -45,26 +45,34 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 			.getLogger(EntityAnnotation.class);
 
 	/**
-	 * Default ratio for Disambiguation (2.0)
+	 * foaf:name disambiguation ratio  (2.0)
 	 */
-	public static final double DEFAULT_DISAMBIGUATION_RATIO = 2.0;
+	public static final double FOAFNAME_DISAMBIGUATION_RATIO = 2.0;
+	/**
+	 * URI Reference correlation disambiguation ratio  (2.0)
+	 */
+	public static final double URI_CORRELATION_DISAMBIGUATION_RATIO = 2.0;
 	/**
 	 * Default ratio for the original fise:confidence of suggested entities
 	 */
-	public static final double DEFAULT_CONFIDNECE_RATIO = 1.0;
+	public static final double ORIGINAL_CONFIDNECE_RATIO = 1.0;
 
 	/**
-	 * The weight for disambiguation scores
-	 * <code>:= disRatio/(disRatio+confRatio)</code>
+	 * The weight for foaf:name disambiguation scores
 	 */
-	private double disambiguationWeight = DEFAULT_DISAMBIGUATION_RATIO
-			/ (DEFAULT_DISAMBIGUATION_RATIO + DEFAULT_CONFIDNECE_RATIO);
+	private double foafNameDisambiguationWeight = FOAFNAME_DISAMBIGUATION_RATIO
+			/ (FOAFNAME_DISAMBIGUATION_RATIO + ORIGINAL_CONFIDNECE_RATIO + URI_CORRELATION_DISAMBIGUATION_RATIO);
+	/**
+	 * The weight for uri-correlation disambiguation scores
+	 */
+	private double uriCorrelationDisambiguationWeight = URI_CORRELATION_DISAMBIGUATION_RATIO
+			/ (FOAFNAME_DISAMBIGUATION_RATIO + ORIGINAL_CONFIDNECE_RATIO + URI_CORRELATION_DISAMBIGUATION_RATIO);
 	/**
 	 * The weight for the original confidence scores
-	 * <code>:= confRatio/(disRatio+confRatio)</code>
+	 * 
 	 */
-	private double confidenceWeight = DEFAULT_CONFIDNECE_RATIO
-			/ (DEFAULT_DISAMBIGUATION_RATIO + DEFAULT_CONFIDNECE_RATIO);
+	private double confidenceWeight = ORIGINAL_CONFIDNECE_RATIO
+			/ (FOAFNAME_DISAMBIGUATION_RATIO + ORIGINAL_CONFIDNECE_RATIO + URI_CORRELATION_DISAMBIGUATION_RATIO);
 
 	private static final LiteralFactory lf = LiteralFactory.getInstance();
 
@@ -81,8 +89,9 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	private Double disambiguatedConfidence = 0.0;
 	private Double entityReferenceDisambiguatedConfidence = 0.0;
 	private Double foafNameDisambiguatedConfidence = 0.0;
-	//the score assigned based on the number of uri co-references with other entities
+	//the score assigned based on the number of uri correlations with other entities
 	private int correlationScore;
+	//uri-references from this entity
 	private int referencesFromEntity;
 	private String site;
 	private String entityType;
@@ -136,22 +145,24 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	}
 
 	public void calculateDisambiguatedConfidence() {
-		Double totalConfidence = (originalConfidence * confidenceWeight)
+		this.disambiguatedConfidence = (originalConfidence * confidenceWeight)
 				+ this.foafNameDisambiguatedConfidence
 				+ this.entityReferenceDisambiguatedConfidence;
-		if (totalConfidence > 1.0) {
-			this.disambiguatedConfidence = 1.0;
-		} else {
-			this.disambiguatedConfidence = totalConfidence;
-		}
 	}
 
 	public void calculateFoafNameDisambiguatedConfidence() {
-		this.foafNameDisambiguatedConfidence = (foafNameDisambiguationScore * disambiguationWeight);
+		this.foafNameDisambiguatedConfidence = (foafNameDisambiguationScore * foafNameDisambiguationWeight);
 	}
 
-	public void calculateEntityReferenceDisambiguatedConfidence() {
-		this.entityReferenceDisambiguatedConfidence = (entityReferenceDisambiguationScore * disambiguationWeight);
+	/**
+	 * Calculates the disambiguation score obtained for entity's URIReference correlations.
+	 * The score is normalized between [0..1]
+	 * @param maximum correlation score of entities int max
+	 * @param minimum correlation score of entities int min
+	 */
+	public void calculateEntityReferenceDisambiguatedConfidence(int max, int min) {
+		double normalizedCorrelationScore = (entityReferenceDisambiguationScore - min)/(max - min);
+		this.entityReferenceDisambiguatedConfidence = (normalizedCorrelationScore * uriCorrelationDisambiguationWeight);
 	}
 
 	/**

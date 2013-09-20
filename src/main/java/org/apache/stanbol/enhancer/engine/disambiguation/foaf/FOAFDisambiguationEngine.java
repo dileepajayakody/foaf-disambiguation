@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.clerezza.rdf.core.Literal;
@@ -94,6 +95,8 @@ public class FOAFDisambiguationEngine extends
 	// all entity annotations suggested for the content
 	private Map<UriRef, EntityAnnotation> allEnitityAnnotations = new HashMap<UriRef, EntityAnnotation>();
 
+	private SortedSet<Integer> correlationScoresOfEntities = new TreeSet<Integer>();
+	
 	@Override
 	public Map<String, Object> getServiceProperties() {
 		return Collections.unmodifiableMap(Collections.singletonMap(
@@ -224,7 +227,6 @@ public class FOAFDisambiguationEngine extends
 
 			}
 			ea.setFoafNameDisambiguationScore(foafNameScore);
-			ea.calculateFoafNameDisambiguatedConfidence();
 		}
 	}
 
@@ -286,6 +288,8 @@ public class FOAFDisambiguationEngine extends
 			Set<UriRef> entityAnnotationsLinked = urisReferencedByEntities
 					.get(uriReference);
 			int correlationScoreForURI = entityAnnotationsLinked.size();
+			//adding the correlationscore to the global set for normalization requirements
+			this.correlationScoresOfEntities.add(new Integer(correlationScoreForURI));
 			for (UriRef ea : entityAnnotationsLinked) {
 				if (allEnitityAnnotations.get(ea) != null) {
 					allEnitityAnnotations.get(ea).increaseCorrelationScore(
@@ -310,13 +314,15 @@ public class FOAFDisambiguationEngine extends
 		int correlationsWithOtherEntities = correlationScoreForEntity - refsFromEntity;
 		double disambiguationScore = (correlationsWithOtherEntities / allUriReferences);
 		ea.setEntityReferenceDisambiguationScore(disambiguationScore);
-		// update the confidence
-		ea.calculateEntityReferenceDisambiguatedConfidence();
 	}
 
 	public void applyDisambiguationResults(MGraph graph) {
+		int max = this.correlationScoresOfEntities.last();
+		int min = this.correlationScoresOfEntities.first();
 		for (EntityAnnotation ea : allEnitityAnnotations.values()) {
 			// calculate total dc
+			ea.calculateFoafNameDisambiguatedConfidence();
+			ea.calculateEntityReferenceDisambiguatedConfidence(max, min);
 			ea.calculateDisambiguatedConfidence();
 			/*
 			 * System.out.println("\n\nEntity : " + ea.getEntityLabel() +
