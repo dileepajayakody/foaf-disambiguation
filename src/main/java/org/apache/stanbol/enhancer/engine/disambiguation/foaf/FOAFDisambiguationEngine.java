@@ -305,9 +305,10 @@ public class FOAFDisambiguationEngine extends
 
 	public void performEntityReferenceDisambiguation(EntityAnnotation ea,
 			int allUriReferences) {
-		double correlationScoreForEntity = ea.getCorrelationScore();
-		double refsFromEntity = ea.getReferencesFromEntity();
-		double disambiguationScore = ((correlationScoreForEntity - refsFromEntity) / allUriReferences);
+		int correlationScoreForEntity = ea.getCorrelationScore();
+		int refsFromEntity = ea.getReferencesFromEntity();
+		int correlationsWithOtherEntities = correlationScoreForEntity - refsFromEntity;
+		double disambiguationScore = (correlationsWithOtherEntities / allUriReferences);
 		ea.setEntityReferenceDisambiguationScore(disambiguationScore);
 		// update the confidence
 		ea.calculateEntityReferenceDisambiguatedConfidence();
