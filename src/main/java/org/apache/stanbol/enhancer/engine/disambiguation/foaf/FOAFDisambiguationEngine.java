@@ -94,7 +94,7 @@ public class FOAFDisambiguationEngine extends
 	private Map<String, Set<UriRef>> urisReferencedByEntities = new HashMap<String, Set<UriRef>>();
 	// all entity annotations suggested for the content
 	private Map<UriRef, EntityAnnotation> allEnitityAnnotations = new HashMap<UriRef, EntityAnnotation>();
-
+	//correlation scores extracted from URIReference correlations of the suggested entities
 	private SortedSet<Integer> correlationScoresOfEntities = new TreeSet<Integer>();
 	private String FOAF_NAMESPACE;
 
@@ -148,7 +148,7 @@ public class FOAFDisambiguationEngine extends
 					try {
 						// process co-referenced entity-references
 						processEntityReferences(suggestion);
-						// matching with foaf:name and related properties
+						// matching with foaf:name
 						processFOAFNameDisambiguation(suggestion,
 								selectedTextsItr);
 						// adding new entity annotation to the global map
@@ -162,7 +162,7 @@ public class FOAFDisambiguationEngine extends
 				}
 			}
 		}
-		// calculate link matches
+		// calculate correlation scores for entities and disambiguate
 		caculateURICorrelationScoreForEntities();
 		disambiguateEntityReferences();
 		// writing back to graph
