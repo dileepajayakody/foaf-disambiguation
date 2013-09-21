@@ -1,8 +1,8 @@
-Stanbol Entity Disambiguation using FOAF Co-reference
+Stanbol Entity Disambiguation using FOAF Correlation
 ======================================================
 
 This is the Stanbol enhacement engine developed as part of the GSoC 2013 project [1]. <br/>
-
+This engine uses FOAF correlation techniques to disambiguate suggested entities in a content. 
 The engine's main functionality is to increase the confidence of Entity-Annotations identified from previous engines, by using 2 fundamental techniques; <br/>
 1. Processing correlating URI references in the Entities to detect connected-ness<br/>
 2. Processing foaf:name comparison with fise:selected-text
