@@ -45,8 +45,8 @@ The entityhub-site: <code>foaf-site</code> created by indexing the btc2012 datas
 Please go through the steps in the project's README to configure the 'foaf-site' in Stanbol entityhub and use it in the foaf-site-chain enhancement-chain. The new disambiguation-foaf engine will be used to extend the functionality of this enhancement-chain in this project.<br/>
 
 After configuring the 'foaf-site' with sufficient a FOAF dataset you can install and use the new engine by following below steps; <br/>
-1. Build the maven project using command : <code>mvn clean install</code> 
-2. Start the Stanbol engine and install the bundle: <code>org.apache.stanbol.enhancer.engines.disambiguation.foaf-1.0-SNAPSHOT.jar</code> 
+1. Build the maven project using command : <code>mvn clean install</code> <br/>
+2. Start the Stanbol engine and install the bundle: <code>org.apache.stanbol.enhancer.engines.disambiguation.foaf-1.0-SNAPSHOT.jar</code><br/> 
 3. Configure the foaf-site-chain with the new disambiguation engine
 
 The new engine is identified by : <code>disambiguation-foaf</code>
