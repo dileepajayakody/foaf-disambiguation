@@ -45,11 +45,11 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 			.getLogger(EntityAnnotation.class);
 
 	/**
-	 * foaf:name disambiguation ratio  (2.0)
+	 * foaf:name disambiguation ratio (2.0)
 	 */
 	public static final double FOAFNAME_DISAMBIGUATION_RATIO = 2.0;
 	/**
-	 * URI Reference correlation disambiguation ratio  (2.0)
+	 * URI Reference correlation disambiguation ratio (2.0)
 	 */
 	public static final double URI_CORRELATION_DISAMBIGUATION_RATIO = 2.0;
 	/**
@@ -84,14 +84,15 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	private Entity entity;
 
 	private Double originalConfidence = 0.0;
-	//private Double entityReferenceDisambiguationScore = 0.0;
+	// private Double entityReferenceDisambiguationScore = 0.0;
 	private Double foafNameDisambiguationScore = 0.0;
 	private Double disambiguatedConfidence = 0.0;
 	private Double entityReferenceDisambiguatedConfidence = 0.0;
 	private Double foafNameDisambiguatedConfidence = 0.0;
-	//the score assigned based on the number of uri correlations with other entities
+	// the score assigned based on the number of uri correlations with other
+	// entities
 	private int correlationScore;
-	//uri-references from this entity
+	// uri-references from this entity
 	private int referencesFromEntity;
 	private String site;
 	private String entityType;
@@ -108,8 +109,8 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	}
 
 	/**
-	 * Allows to create EntityAnnotations from existing fise:TextAnnotation contained
-	 * in the metadata of the processed {@link ContentItem}
+	 * Allows to create EntityAnnotations from existing fise:TextAnnotation
+	 * contained in the metadata of the processed {@link ContentItem}
 	 * 
 	 * @param graph
 	 * @param uri
@@ -155,14 +156,20 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	}
 
 	/**
-	 * Calculates the disambiguation score obtained for entity's URIReference correlations.
-	 * The score is normalized between [0..1]
-	 * @param maximum correlation score of entities int max
-	 * @param minimum correlation score of entities int min
+	 * Calculates the disambiguation score obtained for entity's URIReference
+	 * correlations. The score is normalized between [0..1]
+	 * 
+	 * @param maximum
+	 *            correlation score of entities int max
+	 * @param minimum
+	 *            correlation score of entities int min
 	 */
 	public void calculateEntityReferenceDisambiguatedConfidence(int max, int min) {
-		double normalizedCorrelationScore = (correlationScore - min)/(max - min);
-		this.entityReferenceDisambiguatedConfidence = (normalizedCorrelationScore * uriCorrelationDisambiguationWeight);
+		if ((max - min) > 0) {
+			double normalizedCorrelationScore = (correlationScore - min)
+					/ (max - min);
+			this.entityReferenceDisambiguatedConfidence = (normalizedCorrelationScore * uriCorrelationDisambiguationWeight);
+		}
 	}
 
 	/**
@@ -260,8 +267,6 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 		return entityLabel;
 	}
 
-	
-
 	public void setCorrelationScore(int correlationScore) {
 		this.correlationScore = correlationScore;
 	}
@@ -276,7 +281,7 @@ public class EntityAnnotation implements Comparable<EntityAnnotation> {
 	}
 
 	public void increaseCorrelationScore(int corefEntities) {
-		this.correlationScore+=corefEntities;
+		this.correlationScore += corefEntities;
 	}
 
 	public int getCorrelationScore() {

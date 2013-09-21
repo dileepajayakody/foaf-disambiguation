@@ -50,9 +50,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The FOAF Disambiguation Engine analyses the connected-ness of the entities
- * suggested in a content item by identifying correlated URI references of
- * the entities. The fise:confidence of the entities are increased with the
- * number of matches of references with other entities.
+ * suggested in a content item by identifying correlated URI references of the
+ * entities. The fise:confidence of the entities are increased with the number
+ * of matches of references with other entities.
  * 
  * 
  * @author Dileepa Jayakody
@@ -96,7 +96,8 @@ public class FOAFDisambiguationEngine extends
 	private Map<UriRef, EntityAnnotation> allEnitityAnnotations = new HashMap<UriRef, EntityAnnotation>();
 
 	private SortedSet<Integer> correlationScoresOfEntities = new TreeSet<Integer>();
-	
+	private String FOAF_NAMESPACE;
+
 	@Override
 	public Map<String, Object> getServiceProperties() {
 		return Collections.unmodifiableMap(Collections.singletonMap(
@@ -124,6 +125,7 @@ public class FOAFDisambiguationEngine extends
 	@Override
 	public void computeEnhancements(ContentItem ci) throws EngineException {
 		MGraph graph = ci.getMetadata();
+		FOAF_NAMESPACE = namespacePrefixService.getNamespace("foaf");
 		Iterator<Triple> it = graph.filter(null, RDF_TYPE,
 				TechnicalClasses.ENHANCER_TEXTANNOTATION);
 		while (it.hasNext()) {
@@ -207,9 +209,8 @@ public class FOAFDisambiguationEngine extends
 			Iterator<Triple> selectedTextsTriples) throws SiteException {
 		Entity entity = this.getEntityFromEntityHub(ea);
 		Representation entityRep = entity.getRepresentation();
-		Text foafNameText = ((Text) entityRep
-				.getFirst(FOAFDisambiguationConstants.FOAF_NAME
-						.getUnicodeString()));
+		String foafNameURI = this.FOAF_NAMESPACE + "name";
+		Text foafNameText = ((Text) entityRep.getFirst(foafNameURI));
 		if (foafNameText != null) {
 			String foafName = foafNameText.getText();
 			// if the selected-text matches exactly with the foaf-name then
@@ -254,12 +255,6 @@ public class FOAFDisambiguationEngine extends
 				org.apache.stanbol.entityhub.servicesapi.model.Reference uriReference = urisReferenced
 						.next();
 				linksFromEntity++;
-				/*
-				 * System.out.println("processing uriReference : " +
-				 * uriReference.getReference() + "\n from entity: " +
-				 * entityAnnotation.getEntityUri().getUnicodeString() +
-				 * "\n for field : " + field + "\n");
-				 */
 				String referenceString = uriReference.getReference();
 				if (urisReferencedByEntities.containsKey(referenceString)) {
 					Set<UriRef> eas = urisReferencedByEntities
@@ -279,8 +274,8 @@ public class FOAFDisambiguationEngine extends
 
 	/**
 	 * <p>
-	 * Counts the number of correlated URI-References and add that
-	 * score to correlated entities
+	 * Counts the number of correlated URI-References and add that score to
+	 * correlated entities
 	 * </p>
 	 */
 	public void caculateURICorrelationScoreForEntities() {
@@ -288,8 +283,10 @@ public class FOAFDisambiguationEngine extends
 			Set<UriRef> entityAnnotationsLinked = urisReferencedByEntities
 					.get(uriReference);
 			int correlationScoreForURI = entityAnnotationsLinked.size();
-			//adding the correlationscore to the global set for normalization requirements
-			this.correlationScoresOfEntities.add(new Integer(correlationScoreForURI));
+			// adding the correlationscore to the global set for normalization
+			// requirements
+			this.correlationScoresOfEntities.add(new Integer(
+					correlationScoreForURI));
 			for (UriRef ea : entityAnnotationsLinked) {
 				if (allEnitityAnnotations.get(ea) != null) {
 					allEnitityAnnotations.get(ea).increaseCorrelationScore(
@@ -301,7 +298,6 @@ public class FOAFDisambiguationEngine extends
 
 	public void disambiguateEntityReferences() {
 		int allUriRefs = urisReferencedByEntities.keySet().size();
-		// System.out.println("All URI links : " + allUriLinks);
 		for (EntityAnnotation ea : allEnitityAnnotations.values()) {
 			this.performEntityReferenceDisambiguation(ea, allUriRefs);
 		}
@@ -311,37 +307,37 @@ public class FOAFDisambiguationEngine extends
 			int allUriReferences) {
 		int correlationScoreForEntity = ea.getCorrelationScore();
 		int refsFromEntity = ea.getReferencesFromEntity();
-		int correlationsWithOtherEntities = correlationScoreForEntity - refsFromEntity;
-		//double disambiguationScore = (correlationsWithOtherEntities / allUriReferences);
+		int correlationsWithOtherEntities = correlationScoreForEntity
+				- refsFromEntity;
 		ea.setCorrelationScore(correlationsWithOtherEntities);
 	}
 
 	public void applyDisambiguationResults(MGraph graph) {
 		int max = this.correlationScoresOfEntities.last();
 		int min = this.correlationScoresOfEntities.first();
-		//System.out.println("CorrelationScores max :"+ max + " min :" + min);
+		//System.out.println("CorrelationScores max :" + max + " min :" + min);
 		for (EntityAnnotation ea : allEnitityAnnotations.values()) {
 			// calculate total dc
 			ea.calculateFoafNameDisambiguatedConfidence();
 			ea.calculateEntityReferenceDisambiguatedConfidence(max, min);
 			ea.calculateDisambiguatedConfidence();
-		/*	
-			  System.out.println("\n\nEntity : " + ea.getEntityLabel() +
-			  "\n site: " + ea.getSite() + "\n originalconf: " +
-			  ea.getOriginalConfidnece().toString() +
-			  "\n no of links from entity: " + ea.getReferencesFromEntity() +
-			  "\n  entity foafname-score :" +
-			  ea.getFoafNameDisambiguationScore() +
-			  "\n no of matches : " + ea.getCorrelationScore() +
-			  "\n  entity correlation-score :" +
-			  ea.getCorrelationScore() +
-			  "\n foaf name disamb-conf: " +
-			  ea.getFoafNameDisambiguatedConfidence().toString() +
-			  "\n entity reference disamb-conf: " +
-			  ea.getEntityReferenceDisambiguatedConfidence().toString() +
-			  "\n Total disamb-conf: " +
-			  ea.getDisambiguatedConfidence().toString());
-			 */
+/*
+			System.out.println("\n\nEntity : " + ea.getEntityLabel()
+					+ "\n site: " + ea.getSite() + "\n originalconf: "
+					+ ea.getOriginalConfidnece().toString()
+					+ "\n no of links from entity: "
+					+ ea.getReferencesFromEntity()
+					+ "\n  entity foafname-score :"
+					+ ea.getFoafNameDisambiguationScore()
+					+ "\n no of matches : " + ea.getCorrelationScore()
+					+ "\n  entity correlation-score :"
+					+ ea.getCorrelationScore() + "\n foaf name disamb-conf: "
+					+ ea.getFoafNameDisambiguatedConfidence().toString()
+					+ "\n entity reference disamb-conf: "
+					+ ea.getEntityReferenceDisambiguatedConfidence().toString()
+					+ "\n Total disamb-conf: "
+					+ ea.getDisambiguatedConfidence().toString());
+*/
 			EnhancementEngineHelper.set(graph, ea.getUriLink(),
 					ENHANCER_CONFIDENCE, ea.getDisambiguatedConfidence(),
 					literalFactory);
