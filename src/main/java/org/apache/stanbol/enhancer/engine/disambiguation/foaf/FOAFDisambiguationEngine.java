@@ -210,6 +210,8 @@ public class FOAFDisambiguationEngine extends
 		Entity entity = this.getEntityFromEntityHub(ea);
 		Representation entityRep = entity.getRepresentation();
 		String foafNameURI = this.FOAF_NAMESPACE + "name";
+		//when comparing selected text with foaf:name, all whitespaces and non-word chars are removed
+		String regexPattern = "[\\s\\W]";
 		Text foafNameText = ((Text) entityRep.getFirst(foafNameURI));
 		if (foafNameText != null) {
 			String foafName = foafNameText.getText();
@@ -219,8 +221,11 @@ public class FOAFDisambiguationEngine extends
 			while (selectedTextsTriples.hasNext()) {
 				String selectedText = ((Literal) selectedTextsTriples.next()
 						.getObject()).getLexicalForm();
+				String selectedTextStr = selectedText.replaceAll(regexPattern, "");
 				if (foafName != null) {
-					if (selectedText.equalsIgnoreCase(foafName)) {
+					String foafNameStr = foafName.replaceAll(regexPattern, "");
+					System.out.println("the regexed foafName:" + foafNameStr);
+					if (selectedTextStr.equalsIgnoreCase(foafNameStr)) {
 						foafNameScore++;
 						break;
 					}
