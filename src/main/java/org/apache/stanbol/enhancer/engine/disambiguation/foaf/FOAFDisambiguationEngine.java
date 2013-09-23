@@ -320,29 +320,12 @@ public class FOAFDisambiguationEngine extends
 	public void applyDisambiguationResults(MGraph graph) {
 		int max = this.correlationScoresOfEntities.last();
 		int min = this.correlationScoresOfEntities.first();
-		//System.out.println("CorrelationScores max :" + max + " min :" + min);
+	
 		for (EntityAnnotation ea : allEnitityAnnotations.values()) {
 			// calculate total dc
 			ea.calculateFoafNameDisambiguatedConfidence();
 			ea.calculateEntityReferenceDisambiguatedConfidence(max, min);
 			ea.calculateDisambiguatedConfidence();
-/*
-			System.out.println("\n\nEntity : " + ea.getEntityLabel()
-					+ "\n site: " + ea.getSite() + "\n originalconf: "
-					+ ea.getOriginalConfidnece().toString()
-					+ "\n no of links from entity: "
-					+ ea.getReferencesFromEntity()
-					+ "\n  entity foafname-score :"
-					+ ea.getFoafNameDisambiguationScore()
-					+ "\n no of matches : " + ea.getCorrelationScore()
-					+ "\n  entity correlation-score :"
-					+ ea.getCorrelationScore() + "\n foaf name disamb-conf: "
-					+ ea.getFoafNameDisambiguatedConfidence().toString()
-					+ "\n entity reference disamb-conf: "
-					+ ea.getEntityReferenceDisambiguatedConfidence().toString()
-					+ "\n Total disamb-conf: "
-					+ ea.getDisambiguatedConfidence().toString());
-*/
 			EnhancementEngineHelper.set(graph, ea.getUriLink(),
 					ENHANCER_CONFIDENCE, ea.getDisambiguatedConfidence(),
 					literalFactory);
